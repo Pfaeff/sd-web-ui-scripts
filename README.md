@@ -3,9 +3,20 @@ Custom scripts for the stable diffusion web ui by AUTOMATIC1111
 
 ## Mosaicing
 
+The algorithm in action:
+
+https://www.youtube.com/watch?v=t7nopq27uaM
+
 ### Installation
 
 Download `mosaic.py` and place it in the `stable-diffusion-webui/scripts` folder, then restart webui.
+
+### Usage
+
+- Patches will be resized for processing from `patch size` to whatever your `width` and `height` settings are and then scaled back down for the mosaic.
+- elliptical mask shape with lead to less visible seems/patches, but requires a larger overlap in order to not produce gaps
+- more overlap means more patches to process and thus longer computation
+
 
 ### Results / Examples / Experimentation
 
