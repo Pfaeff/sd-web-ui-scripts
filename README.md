@@ -16,6 +16,7 @@ Download `mosaic.py` and place it in the `stable-diffusion-webui/scripts` folder
 - Patches will be resized for processing from `patch size` to whatever your `width` and `height` settings are and then scaled back down for the mosaic.
 - elliptical mask shape with lead to less visible seems/patches, but requires a larger overlap in order to not produce gaps
 - more overlap means more patches to process and thus longer computation
+- This will not change the size of the image. If you want to use this as an upscaler, you have to use any other upscaler before applying this algorithm.
 
 
 ### Results / Examples / Experimentation
