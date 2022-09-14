@@ -22,7 +22,8 @@ You can find the algorithm in the img2img tab under "Scripts".
 - Patches will be resized for processing from `patch size` to whatever your `width` and `height` settings are and then scaled back down for the mosaic.
 - elliptical mask shape will lead to less visible seems/patches, but requires a larger overlap in order to not produce gaps
 - more overlap means more patches to process and thus longer computation
-- This will not change the size of the image. If you want to use this as an upscaler, you have to use any other upscaler before applying this algorithm.
+- Use preview mode to view how a single patch would look after processing, before committing the entire image.
+- "Upscale amount" will upscale the image using bilinear upscaling before processing. For better results, I'd recommend manual upscaling with a better upscaler.
 
 
 ### Results / Examples / Experimentation
