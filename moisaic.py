@@ -1,5 +1,5 @@
 ################################
-# mosaic.py - 0.1 by Pfaeff
+# mosaic.py - 0.2 by Pfaeff
 ################################
 
 import math
@@ -205,11 +205,13 @@ class Script(scripts.Script):
         mask_border        = gr.Slider(label="Mask border",        minimum=0,  maximum=0.49, step=0.01, value=0.1)
         order              = gr.Radio( label='Processing order', choices=['radial', 'row-by-row'],      value='radial',     type="index", visible=False)
         randomize_position = gr.Slider(label="Randomize position", minimum=0,  maximum=0.25, step=0.01, value=0.06)
+        upscale_factor     = gr.Slider(label="Upscale amount", minimum=1,  maximum=16, step=1, value=1)
+        preview_mode       = gr.Checkbox(label='Single patch preview mode', value=False)
 
-        return [patch_size, overlap, mask_shape, mask_border, order, randomize_position]
+        return [patch_size, overlap, mask_shape, mask_border, order, randomize_position, upscale_factor, preview_mode]
 
 
-    def run(self, p, patch_size, overlap, mask_shape, mask_border, order, randomize_position):
+    def run(self, p, patch_size, overlap, mask_shape, mask_border, order, randomize_position, upscale_factor, preview_mode):
         if p.seed:
             random.seed(p.seed)
 
@@ -246,6 +248,9 @@ class Script(scripts.Script):
 
         img = np.asarray(p.init_images[0]).astype(np.float32) / 255.0
 
+        if upscale_factor > 1.0:
+            img = cv2.resize(img, None, fx=upscale_factor, fy=upscale_factor)
+
         image_width = img.shape[1]
         image_height = img.shape[0]
 
@@ -262,9 +267,13 @@ class Script(scripts.Script):
             randomize_position_x, 
             randomize_position_y)
 
-        print(f"Mosaicing will process a total of {len(positions)} images tiled as {patch_width}x{patch_height}.")
 
-        state.job_count = len(positions)           
+        if not preview_mode:
+            print(f"Mosaicing will process a total of {len(positions)} images tiled as {patch_width}x{patch_height}.")
+            state.job_count = len(positions)           
+        else:
+            print(f"If it were not in preview mode, mosaicing would now process a total of {len(positions)} images tiled as {patch_width}x{patch_height}.")
+            state.job_count = 1
 
         for idx, (left, top, right, bottom) in enumerate(positions):
             pad_left = -left if left < 0 else 0
@@ -312,7 +321,12 @@ class Script(scripts.Script):
                 output_image_np = output_image_np[pad_top:patch_height - pad_bottom,
                                                   pad_left:patch_width - pad_right, :]  
 
-            img[top:bottom, left:right, :] = output_image_np
+
+            if not preview_mode:
+                img[top:bottom, left:right, :] = output_image_np
+            else:
+                img = output_image_np
+                break
 
         result = Image.fromarray((img * 255).astype(np.uint8))
 
