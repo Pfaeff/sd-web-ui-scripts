@@ -1,5 +1,5 @@
 # sd-web-ui-scripts
-Custom scripts for the stable diffusion web ui by AUTOMATIC1111
+Custom scripts for the [stable diffusion web ui](https://github.com/AUTOMATIC1111/stable-diffusion-webui) by [AUTOMATIC1111](https://github.com/AUTOMATIC1111)
 
 ## Mosaicing
 
