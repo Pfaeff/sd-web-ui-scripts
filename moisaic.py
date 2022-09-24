@@ -104,7 +104,6 @@ def indices_to_position(
         new_left = left + random.randint(0, randomize_position_x) - randomize_position_x // 2
 
         while (out_of_bounds(new_left, patch_width, image_width)):
-            print("new_left is out of bounds:", new_left)
             new_left = left + random.randint(0, randomize_position_x) - randomize_position_x // 2
 
         left = new_left
@@ -113,7 +112,6 @@ def indices_to_position(
         new_top = top + random.randint(0, randomize_position_y) - randomize_position_y // 2
 
         while (out_of_bounds(new_top, patch_height, image_height)):
-            print("new_top is out of bounds:", new_top)
             new_top = top + random.randint(0, randomize_position_y) - randomize_position_y // 2
 
         top = new_top
