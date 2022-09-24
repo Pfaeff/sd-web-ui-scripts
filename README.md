@@ -2,6 +2,7 @@
 Custom scripts for the [stable diffusion web ui](https://github.com/AUTOMATIC1111/stable-diffusion-webui) by [AUTOMATIC1111](https://github.com/AUTOMATIC1111)
 
 ## Mosaicing
+![example](https://i.imgur.com/ySLUZ9i.jpg)
 
 The algorithm in action:
 
