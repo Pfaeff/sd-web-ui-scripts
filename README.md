@@ -3,6 +3,8 @@ Custom scripts for the [stable diffusion web ui](https://github.com/AUTOMATIC111
 
 ## Mosaicing
 
+![example](/example.png?raw=true "example")
+
 The algorithm in action:
 
 https://www.youtube.com/watch?v=t7nopq27uaM
