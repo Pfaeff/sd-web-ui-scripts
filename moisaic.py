@@ -1,5 +1,5 @@
 ################################
-# mosaic.py - 0.3 by Pfaeff
+# mosaic.py - 0.4 by Pfaeff
 ################################
 
 import math
@@ -214,11 +214,12 @@ class Script(scripts.Script):
         randomize_position = gr.Slider(label="Randomize position", minimum=0,  maximum=0.25, step=0.01,   value=0.06)
         upscale_factor     = gr.Slider(label="Upscale amount",     minimum=1,  maximum=16, step=1, value=1)
         preview_mode       = gr.Checkbox(label='Single patch preview mode', value=False)
+        mask_preview       = gr.Checkbox(label='Mask preview mode (white means a pixel is going to get regenerated)', value=False)
 
-        return [patch_size, overlap, mask_shape, mask_border, order, randomize_position, upscale_factor, preview_mode]
+        return [patch_size, overlap, mask_shape, mask_border, order, randomize_position, upscale_factor, preview_mode, mask_preview]
 
 
-    def run(self, p, patch_size, overlap, mask_shape, mask_border, order, randomize_position, upscale_factor, preview_mode):
+    def run(self, p, patch_size, overlap, mask_shape, mask_border, order, randomize_position, upscale_factor, preview_mode, mask_preview):
         if p.seed:
             random.seed(p.seed)
 
@@ -258,6 +259,9 @@ class Script(scripts.Script):
         if upscale_factor > 1.0:
             img = cv2.resize(img, None, fx=upscale_factor, fy=upscale_factor)
 
+        if mask_preview:
+            img[:, :, :] = 0.0
+
         image_width = img.shape[1]
         image_height = img.shape[0]
 
@@ -273,7 +277,6 @@ class Script(scripts.Script):
             overlap_y, 
             randomize_position_x, 
             randomize_position_y)
-
 
         if not preview_mode:
             print(f"Mosaicing will process a total of {len(positions)} images tiled as {patch_width}x{patch_height}.")
@@ -308,23 +311,28 @@ class Script(scripts.Script):
             p.latent_mask = mask_image
 
             state.job = f"Batch {idx + 1} out of {len(positions)}"
-            processed = process_images(p)
 
-            initial_seed = processed.seed
-            initial_info = processed.info
+            if not mask_preview:
+                processed = process_images(p)
 
-            p.seed = processed.seed + 1
-            random.seed(p.seed)
+                initial_seed = processed.seed
+                initial_info = processed.info
 
-            output_images = processed.images
+                p.seed = processed.seed + 1
+                random.seed(p.seed)
 
-            if len(output_images) == 0:
-                return None
+                output_images = processed.images
+                output_image_np = np.asarray(output_images[0]).astype(np.float32) / 255.0
+                output_image_np = cv2.resize(output_image_np, (patch_width, patch_height))
+                output_image_np = np.multiply(output_image_np, mask) + np.multiply(crop, 1.0 - mask)
 
-            output_image_np = np.asarray(output_images[0]).astype(np.float32) / 255.0
-            output_image_np = cv2.resize(output_image_np, (patch_width, patch_height))
-
-            output_image_np = np.multiply(output_image_np, mask) + np.multiply(crop, 1.0 - mask)
+                if len(output_images) == 0:
+                    return None
+            else:
+                initial_seed = -1
+                initial_info = ""
+                output_image_np = mask
+                output_image_np = 1.0 - np.multiply(1.0 - output_image_np, 1.0 - crop)
     
             # Unpad
             if ((pad_left > 0) or (pad_right > 0) or (pad_top > 0) or (pad_bottom > 0)):
@@ -340,7 +348,7 @@ class Script(scripts.Script):
 
         result = Image.fromarray((img * 255).astype(np.uint8))
 
-        if opts.samples_save:
+        if not preview_mode and not mask_preview and opts.samples_save:
             images.save_image(result, p.outpath_samples, "", initial_seed, p.prompt, opts.grid_format, info=initial_info, p=p)
 
         processed = Processed(p, [result], initial_seed, initial_info)
