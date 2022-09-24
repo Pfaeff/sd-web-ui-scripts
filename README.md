@@ -11,7 +11,7 @@ https://www.youtube.com/watch?v=t7nopq27uaM
 
 UI:
 
-![UI](/ui_0.4.png?raw=true "UI")
+![UI](/ui_V0.4.png?raw=true "UI")
 
 ### Installation
 
