@@ -11,7 +11,7 @@ https://www.youtube.com/watch?v=t7nopq27uaM
 
 UI:
 
-![UI](/ui_0.2.png?raw=true "UI")
+![UI](/ui_0.4.png?raw=true "UI")
 
 ### Installation
 
@@ -25,6 +25,7 @@ You can find the algorithm in the img2img tab under "Scripts".
 - elliptical mask shape will lead to less visible seems/patches, but requires a larger overlap in order to not produce gaps
 - more overlap means more patches to process and thus longer computation
 - Use preview mode to view how a single patch would look after processing, before committing the entire image.
+- Use mask preview mode to check the coverage of the mask pattern for your image (white means a pixel will be regenerated, black parts of the image will remain untouched). You can combine this with the preview mode in order to examine a single mask.
 - "Upscale amount" will upscale the image using bilinear upscaling before processing. For better results, I'd recommend manual upscaling with a better upscaler.
 
 
