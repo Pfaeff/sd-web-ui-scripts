@@ -1,5 +1,5 @@
 ################################
-# mosaic.py - 0.2 by Pfaeff
+# mosaic.py - 0.3 by Pfaeff
 ################################
 
 import math
@@ -92,10 +92,19 @@ def indices_to_position(
     left = x * (patch_width - overlap_x) - patch_width // 2
     top  = y * (patch_height - overlap_y) - patch_height // 2
 
+    # TODO prevent this from happening in the first place
+    if out_of_bounds(left, patch_width, image_width):
+        return None
+
+    # TODO prevent this from happening in the first place
+    if out_of_bounds(top, patch_height, image_height):
+        return None        
+
     if randomize_position_x > 0:
         new_left = left + random.randint(0, randomize_position_x) - randomize_position_x // 2
 
         while (out_of_bounds(new_left, patch_width, image_width)):
+            print("new_left is out of bounds:", new_left)
             new_left = left + random.randint(0, randomize_position_x) - randomize_position_x // 2
 
         left = new_left
@@ -104,6 +113,7 @@ def indices_to_position(
         new_top = top + random.randint(0, randomize_position_y) - randomize_position_y // 2
 
         while (out_of_bounds(new_top, patch_height, image_height)):
+            print("new_top is out of bounds:", new_top)
             new_top = top + random.randint(0, randomize_position_y) - randomize_position_y // 2
 
         top = new_top
@@ -129,13 +139,10 @@ def generate_row_positions(
     num_tiles_x = int(math.ceil(image_width / (patch_width  - overlap_x))) + 1
     num_tiles_y = int(math.ceil(image_height / (patch_height - overlap_y))) + 1
 
-    print("num_tiles_x:", num_tiles_x)
-    print("num_tiles_y:", num_tiles_y)
-
     positions = []
     for y in range(num_tiles_y):
         for x in range(num_tiles_x):
-            positions.append((indices_to_position(
+            position = indices_to_position(
                 x, 
                 y, 
                 image_width,
@@ -145,7 +152,9 @@ def generate_row_positions(
                 overlap_x, 
                 overlap_y, 
                 randomize_position_x, 
-                randomize_position_y)))
+                randomize_position_y)
+            if position:
+                positions.append(position)
 
     return positions
 
@@ -199,13 +208,13 @@ class Script(scripts.Script):
         if not is_img2img:
             return None
 
-        patch_size         = gr.Slider(label="Patch size",         minimum=64, maximum=1024, step=8, value=512)
-        overlap            = gr.Slider(label="Overlap",            minimum=0,  maximum=0.99, step=0.01, value=0.75)
-        mask_shape         = gr.Radio( label='Mask shape ',       choices=['elliptical', 'rectangular'], value='elliptical', type="index", visible=False)
-        mask_border        = gr.Slider(label="Mask border",        minimum=0,  maximum=0.49, step=0.01, value=0.1)
-        order              = gr.Radio( label='Processing order', choices=['radial', 'row-by-row'],      value='radial',     type="index", visible=False)
-        randomize_position = gr.Slider(label="Randomize position", minimum=0,  maximum=0.25, step=0.01, value=0.06)
-        upscale_factor     = gr.Slider(label="Upscale amount", minimum=1,  maximum=16, step=1, value=1)
+        patch_size         = gr.Slider(label="Patch size",         minimum=64, maximum=1024, step=8,      value=512)
+        overlap            = gr.Slider(label="Overlap",            minimum=0,  maximum=0.99, step=0.01,   value=0.75)
+        mask_shape         = gr.Radio(label='Mask shape ',         choices=['elliptical', 'rectangular'], value='elliptical', type="index", visible=False)
+        mask_border        = gr.Slider(label="Mask border",        minimum=0,  maximum=0.49, step=0.01,   value=0.1)
+        order              = gr.Radio(label='Processing order',    choices=['radial', 'row-by-row'],      value='radial',     type="index", visible=False)
+        randomize_position = gr.Slider(label="Randomize position", minimum=0,  maximum=0.25, step=0.01,   value=0.06)
+        upscale_factor     = gr.Slider(label="Upscale amount",     minimum=1,  maximum=16, step=1, value=1)
         preview_mode       = gr.Checkbox(label='Single patch preview mode', value=False)
 
         return [patch_size, overlap, mask_shape, mask_border, order, randomize_position, upscale_factor, preview_mode]
@@ -218,11 +227,11 @@ class Script(scripts.Script):
         patch_width = patch_size
         patch_height = patch_size
         overlap_x = int(round(overlap * patch_width))
-        overlap_y = int(round(overlap * patch_width))
+        overlap_y = int(round(overlap * patch_height))
         randomize_position_x = int(round(randomize_position * patch_width))
-        randomize_position_y = int(round(randomize_position * patch_width))
+        randomize_position_y = int(round(randomize_position * patch_height))
         mask_border_x = int(round(mask_border * patch_width))
-        mask_border_y = int(round(mask_border * patch_width))
+        mask_border_y = int(round(mask_border * patch_height))
 
         mask_feather_x = mask_border_x - 1
         mask_feather_y = mask_border_y - 1
@@ -310,6 +319,9 @@ class Script(scripts.Script):
             random.seed(p.seed)
 
             output_images = processed.images
+
+            if len(output_images) == 0:
+                return None
 
             output_image_np = np.asarray(output_images[0]).astype(np.float32) / 255.0
             output_image_np = cv2.resize(output_image_np, (patch_width, patch_height))
